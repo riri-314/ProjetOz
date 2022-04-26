@@ -11,11 +11,11 @@ local
     fun {NoteToExtended Note Duration}
         case Note
         of Name#Octave then
-            note(name:Name octave:Octave sharp:true duration:Duration instrument:none)
+            note(name:Name octave:{IntToFloat Octave} sharp:true duration:Duration instrument:none)
         [] Atom then
             case {AtomToString Atom}
             of [_] then
-                note(name:Atom octave:4 sharp:false duration:Duration instrument:none)
+                note(name:Atom octave:4.0 sharp:false duration:Duration instrument:none)
             [] [N O] then
                 note(name:{StringToAtom [N]}
                     octave:{StringToInt [O]}
@@ -196,9 +196,165 @@ local
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    fun {Height Note} %C C# D D# E F F# G G# A A# B
+        case Note
+        of note(name:Name octave:Octave sharp:Sharp duration:Duration instrument:none) then
+            if Name == b then
+                2.0 + (Octave-4.0)
+            elseif Name == a then
+                if Sharp == true then
+                    1.0 + (Octave-4.0)
+                else
+                    0.0
+                end
+            elseif Name == g then
+                if Sharp == true then
+                    ~1.0 + (Octave-4.0)
+                else
+                    ~2.0 + (Octave-4.0)
+                end
+            elseif Name == f then
+                if Sharp == true then
+                    ~3.0 + (Octave-4.0)
+                else
+                    ~4.0 + (Octave-4.0)
+                end
+            elseif Name == e then
+                ~5.0 + (Octave-4.0)
+            elseif Name == d then
+                if Sharp == true then
+                    ~6.0 + (Octave-4.0)
+                else
+                    ~7.0 + (Octave-4.0)
+                end
+            elseif Name == c then
+                if Sharp == true then
+                    ~8.0 + (Octave-4.0)
+                else
+                    ~9.0 + (Octave-4.0)
+                end
+            else
+                error
+            end
+        [] nil then nil
+        end
+    end
 
-    fun {Mix P2T Music} %return samples, liste d'échantillons 
-        {Project.readFile CWD#'wave/animals/chicken.wav'}
+    fun {Frequency H} %height of the Note in Hz
+        (2.0*H/12.0) * 440.0
+    end
+
+    fun{SumAi Samples1 Samples2}
+        case Samples1 
+        of H1|T1 then
+            case Samples2 
+            of H2|T2 then
+                H1+H2|{SumAi T1 T2}
+            [] tail then
+                Samples1
+            else
+                H1|{SumAi T1 nil}
+            end
+        else
+            case Samples2 
+            of H2|T2 then
+                H2|{SumAi nil T2}
+            else
+                nil
+            end
+        end
+    end
+
+    fun {NoteToAi F I J} %F=frequency I=number of the NoteToAi, J=number of the iteration
+        if I=<J then 
+        (1.0/2.0)*{Float.sin ((2.0*3.14*F*I)/44100.0)} | {NoteToAi F I+1 J}
+        end
+    end
+
+    fun{ChrordToAi Chord}
+        case Chord 
+        of H|T then
+            case H 
+            of silence(duration:D) then
+                {SumAi {SilenceToAi D*44100.0 0.0} {ChrordToAi T}}
+            [] note(name:N octave:O sharp:S duration:D instrment:none) then
+                {SumAi {NoteToAi {Frequency H} D*44100.0 0.0} {ChrordToAi T}}
+            else
+                {ChrordToAi T}
+            end
+        else
+            tail
+        end
+    end
+
+    fun {SilenceToAi Duration Acc}
+        if Acc >= Duration then
+            nil
+        else
+            0.0|{SilenceToAi Duration Acc+1.0}
+        end
+     end
+
+    fun {PartToAi Partition}
+        case Partition 
+        of H1|T1 then
+            case H1 
+            of silence(duration:D) then
+                {Append {SilenceToAi 44100.0*D 0.0} {PartToAi T1}}
+            [] note(name:N octave:O sharp:S duration:D instrument:none) then
+                {Append {NoteToAi {Frequency H1} 44100.0*D 0.0} {PartToAi T1}}
+            [] H2|T2 then
+                {Append {ChrordToAi H1} {PartToAi T1}}
+            end
+        else
+            nil
+        end
+    end
+
+    fun{Repeat Amount Music}
+        if Amount == 1 then
+            Music
+        else
+            {Append Music {Repeat Amount-1 Music}}
+        end
+    end
+    
+    fun {Merge Music P2T}
+        case Music 
+        of H1|T1 then
+            case H1
+            of Factor#Music0 then
+                {SumAi Factor*{Mix P2T Music0} {Merge T1 P2T}} 
+            else
+                nil
+            end
+        else 
+            nil
+        end
+    end
+
+    fun {Mix P2T Music}
+        case Music 
+        of H|T then
+            case H 
+            of partition(Partition) then
+                {Append {PartToAi {P2T Partition 1.0 1.0}} {Mix P2T T}}
+            [] repeat(amount:Amount Music) then 
+                {Append {Repeat Amount {Mix P2T Music}} {Mix P2T T}}
+            [] wave(FileName) then
+                2.0
+                %{Append {Project.readFile FileName} {Mix P2T T}}
+            [] samples(Samples) then
+                {Append Samples {Mix P2T T}}
+            [] nil then
+                {Mix P2T T}
+            else
+                {Mix P2T T}
+            end
+        else
+            nil
+        end
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
