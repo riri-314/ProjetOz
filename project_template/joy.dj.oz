@@ -8,9 +8,9 @@ local
                 b a g a stretch(factor:2.0 [d]) ]
 
    % This is not a music.
-   Partition = {Flatten [Tune End1 Tune Tune End2 Interlude Tune End2]} %flattened partition, output of PartitionToTimedList
+   %Partition = {Flatten [Tune End1 Tune Tune End2 Interlude Tune End2]} %flattened partition, output of PartitionToTimedList
    %Partition = [Tune End1 Tune End2 Interlude Tune End2] %partition non-flattened, input of PartitionToTimedList
-   %Partition = [Tune End1 Tune Tune End2 Interlude Tune End2] %debug 
+   Partition = {Flatten [End1]}  %debug 
 
 in
    % This is a music :)
