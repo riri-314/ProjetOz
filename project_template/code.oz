@@ -201,6 +201,10 @@ local
     end
 
     fun {SetDuration Part Time}
+        {Browse setdur}
+        {Browse Part}
+        {Browse stretch}
+        {Browse  {Stretch Part Time/{TimeofPart Part 0.0}}}
         {Stretch Part Time/{TimeofPart Part 0.0}}
     end
 
@@ -210,6 +214,8 @@ local
     fun {ChrodToTimedList Chord}
         case Chord
         of H|T then
+            %{Browse chord2list}
+            %{Browse H}
             {NoteToExtended H 1.0}|{ChrodToTimedList T} %only use | "pipe" when single ellement on head
         [] nil then
             nil
@@ -231,6 +237,7 @@ local
             [] silence(duration:R) then
                 H1|{PartitionToTimedListAux T1 T E} %pass silence to Mix, Mix pass silence to SilenceToAi, SilenceToAi make 0.0 sound
             [] nil then
+                {Browse fuck}
                 {PartitionToTimedListAux T1 T E}
             [] duration(1:P seconds:R) then 
                 {Append {SetDuration {PartitionToTimedListAux P T E} R} {PartitionToTimedListAux T1 T E}}
@@ -247,6 +254,7 @@ local
                 {NoteToExtended H1 T}|{PartitionToTimedListAux T1 T E}
             
             else
+                {Browse fuck}
                 H1|{PartitionToTimedListAux T1 T E} %for robustness
             end
         else
@@ -328,12 +336,15 @@ local
             end
         end
     end
-
+    Pi = 3.14159265359
     fun {NoteToAi F I J} %F=frequency, I=number of NoteToAi to do ex:44100, J=number of the iteration ex:0.0
         if J >= I then
             nil %Strange way to do it...Damn is Oz strange 
         else
-            {Sin ((2.0*3.14*F*I)/44100.0)}/2.0 | {NoteToAi F I J+1.0}
+            %{Browse J}
+            %{Browse {Sin ((2.0*3.1415926535*F*I)/44100.0)}/2.0}
+            %{Sin ((2.0*3.1415926535*F*I)/44100.0)}/2.0 | {NoteToAi F I J+1.0}
+            {Sin (2.0*Pi*F*J)/44100.0}/2.0|{NoteToAi F I J+1.0}
         end
     end
 
@@ -359,10 +370,10 @@ local
         else
             0.0|{SilenceToAi Duration Acc+1.0}
         end
-     end
+    end
 
     fun {PartToAi Partition}
-        %{Browse parttoaipartition}
+        %{Browse p2Ai}
         %{Browse Partition}
         case Partition 
         of H1|T1 then
@@ -377,7 +388,8 @@ local
                 %{Browse T1}
                 %{Browse {Height H1}}
                 %{Browse afterfrequency}
-             
+                %{Browse duration}
+                %{Browse D*44100.0}
                 {Append {NoteToAi {Frequency {Height H1}} 44100.0*D 0.0} {PartToAi T1}} %NOK 
             [] H2|T2 then
                 {Browse whoottt}
@@ -480,7 +492,7 @@ in
    
     % Calls your code, prints the result and outputs the result to `out.wav`.
     % You don't need to modify this.
-    {Browse {Project.run Mix PartitionToTimedList Music 'out-chicken0.wav'}}
+    {Browse {Project.run Mix PartitionToTimedList Music 'out-chicken.wav'}}
 
 
     % Shows the total time to run your code.
