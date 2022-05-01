@@ -155,6 +155,19 @@ local
         [] nil then L
         end
     end
+    fun {StretchChord Chord Factor}
+        case Chord
+        of H1|T1 then 
+            case H1 
+            of silence(duration:R) then
+                silence(duration:Factor*R)|{StretchChord T1 Factor}
+            [] note(name:Name octave:Octave sharp:Sharp duration:Duration instrument:none) then
+                note(name:Name octave:Octave sharp:Sharp duration:Duration*Factor instrument:none)|{StretchChord T1 Factor}
+            end
+        [] nil then
+            nil
+        end
+    end
 
     fun {Stretch Part Factor} %Partion can take Silence Note and Chord as input, Part is allready a extended list
         %{Browse stretch}
@@ -167,7 +180,8 @@ local
             [] note(name:Name octave:Octave sharp:Sharp duration:Duration instrument:none) then
                 note(name:Name octave:Octave sharp:Sharp duration:Duration*Factor instrument:none)|{Stretch T1 Factor}
             [] H2|T2 then
-                {Append {Stretch H2 Factor} {Stretch T2 Factor}}|{Stretch T1 Factor}
+                %{Append {Stretch H2 Factor} {Stretch T2 Factor}}|{Stretch T1 Factor} %Need a func StretchChord
+                {StretchChord H1 Factor}|{Stretch T1 Factor} %Code is getting ugly...
             [] nil then
                 nil
             end
@@ -201,10 +215,10 @@ local
     end
 
     fun {SetDuration Part Time}
-        {Browse setdur}
-        {Browse Part}
-        {Browse stretch}
-        {Browse  {Stretch Part Time/{TimeofPart Part 0.0}}}
+        %{Browse setdur}
+        %{Browse Part}
+        %{Browse stretch}
+        %{Browse  {Stretch Part Time/{TimeofPart Part 0.0}}}
         {Stretch Part Time/{TimeofPart Part 0.0}}
     end
 
@@ -349,6 +363,8 @@ local
     end
 
     fun{ChordToAi Chord}
+        {Browse chord2ai}
+        {Browse Chord}
         case Chord 
         of H|T then
             case H 
@@ -383,24 +399,26 @@ local
             [] note(name:N octave:O sharp:S duration:D instrument:none) then
                 
                 %{Browse whattttt}
-                %{Browse p2ai}
-                %{Browse H1}
+                {Browse p2aiNote}
+                {Browse H1}
                 %{Browse T1}
                 %{Browse {Height H1}}
                 %{Browse afterfrequency}
                 %{Browse duration}
                 %{Browse D*44100.0}
-                {Append {NoteToAi {Frequency {Height H1}} 44100.0*D 0.0} {PartToAi T1}} %NOK 
+                %{Append {NoteToAi {Frequency {Height H1}} 44100.0*D 0.0} {PartToAi T1}} %NOK 
+                {Flatten {NoteToAi {Frequency {Height H1}} 44100.0*D 0.0}|{PartToAi T1}}
             [] H2|T2 then
-                {Browse whoottt}
-                {Append {ChordToAi H1} {PartToAi T1}}
+                {Browse p2aiChord}
+                %{Append {ChordToAi H1} {PartToAi T1}}
+                {Flatten {ChordToAi H1}|{PartToAi T1}}
             end
         else
             nil
         end
     end
 
-    fun{Repeat Amount Music}
+    fun{Repeat Amount Music} %Amount is a Int !!!!!
         if Amount == 1 then
             Music
         else
@@ -431,6 +449,41 @@ local
         end
     end
 
+    fun {Loop Duration Music Acc}
+        local Nofl in 
+            %NumberOfLoop 
+            Nofl = Duration/({IntToFloat {List.lenght Music}}/44100.0) %In float
+            if (Nofl =< 1.0) then
+                {Cut 0.0 Duration Music 0.0}
+            else %Ex if Nofl = 4.67 => 4*Repeat + Cut 0.0 Duration-4
+                if (Nofl - {IntToFloat {FloatToInt Nofl}} >= 0.0) then %53.3-53 => 53 repeat and cut form 0.0 to 0.3
+                    {Append {Repeat {FloatToInt Nofl} Music} {Cut 0.0 (Duration-({IntToFloat {FloatToInt Nofl}}*({IntToFloat {List.lenght Music}}/44100.0))) Music 0.0}}
+                else %Ex if Nofl = 53.99 => 54-1 repeat and cut from 0.0 to 53.99 - (54-1)
+                    {Append {Repeat {FloatToInt Nofl} Music} {Cut 0.0 (Duration-({IntToFloat {FloatToInt Nofl}-1}*({IntToFloat {List.lenght Music}}/44100.0))) Music 0.0}}
+                end
+            end
+        end
+    end
+
+    fun {Cut Start Finish Music Acc} %Acc = 0.0    
+        if (Acc =< (Finish*44100.0)-1.0) then %-1.0 is for first ellement, bug resolution
+            case Music of H|T then
+                if (Acc < Start*44100.0) then %cut at start
+                    {Cut Start Finish T Acc+1.0}
+                else %Standard case
+                    H|{Cut Start Finish T Acc+1.0}
+                end
+            else %Need a "else" statment, Oz is verry upset without one
+                0.0|{Cut Start Finish nil Acc+1.0} %Add 0.0 when start ot stop is out of sample reach
+            end
+        else
+            nil
+        end
+    end
+
+
+
+
     fun {Mix P2T Music}
         {Browse music}
         {Browse Music}
@@ -456,8 +509,10 @@ local
             %    {Append {clip Low High Music} {Mix P2T T}}
             [] reverse(1:Music) then
                 {Append {Reverse {Mix P2T Music}} {Mix P2T T}}
-            %[] loop(seconds:Duration Music) then
-            %    {Append {Loop Duration Music}}
+            [] loop(seconds:Duration Music) then
+                {Append {Loop Duration {Mix P2T Music} 0.0} {Mix P2T T}}
+            [] cut(start:Start finish:Finish Music) then
+                {Append {Cut Start Finish Music 0.0} {Mix P2T T}}
             [] nil then
                 {Mix P2T T}
             else
@@ -470,7 +525,7 @@ local
     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    %TODOO: remake P2T, final toutch on mix, implementation of sub func mix
+    %TODOO: echo, fade, clip
    
  
     Music = {Project.load CWD#'joy.dj.oz'}
@@ -492,7 +547,7 @@ in
    
     % Calls your code, prints the result and outputs the result to `out.wav`.
     % You don't need to modify this.
-    {Browse {Project.run Mix PartitionToTimedList Music 'out-chicken.wav'}}
+    {Browse {Project.run Mix PartitionToTimedList Music 'Doom_soundtrack.wav'}}
 
 
     % Shows the total time to run your code.
