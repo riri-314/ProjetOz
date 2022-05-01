@@ -164,7 +164,7 @@ local
             [] note(name:Name octave:Octave sharp:Sharp duration:Duration instrument:none) then
                 note(name:Name octave:Octave sharp:Sharp duration:Duration*Factor instrument:none)|{StretchChord T1 Factor}
             end
-        [] nil then
+        else
             nil
         end
     end
@@ -182,14 +182,15 @@ local
             [] H2|T2 then
                 %{Append {Stretch H2 Factor} {Stretch T2 Factor}}|{Stretch T1 Factor} %Need a func StretchChord
                 {StretchChord H1 Factor}|{Stretch T1 Factor} %Code is getting ugly...
-            [] nil then
-                nil
+            else
+                {Stretch Factor T1}
             end
         else
             nil
         end
     end
-
+    
+    
     %Duration is just a fun that call Stretch with the good factor
     fun {TimeofPart Part J}
         case Part
@@ -200,11 +201,12 @@ local
             [] note(name:Name octave:Octave sharp:Sharp duration:Duration instrument:none) then
                 {TimeofPart T1 J+Duration}
             [] H2|T2 then %dirty code
+                
                 case H2
                 of silence(duration:R) then
-                    {TimeofPart T2 J+R}
+                    {TimeofPart T1 J+R} %T1 because only need the time of oune note in a chord
                 [] note(name:Name octave:Octave sharp:Sharp duration:Duration instrument:none) then
-                    {TimeofPart T2 J+Duration}
+                    {TimeofPart T1 J+Duration}
                 end
             else
                 {TimeofPart T1 J}
@@ -351,32 +353,35 @@ local
         end
     end
     Pi = 3.14159265359
-    fun {NoteToAi F I J} %F=frequency, I=number of NoteToAi to do ex:44100, J=number of the iteration ex:0.0
+    fun {NoteToAi F I J A} %F=frequency, I=number of NoteToAi to do ex:44100, J=number of the iteration ex:0.0, A=divide note intensitie by (Only used in ChordToAi)
         if J >= I then
             nil %Strange way to do it...Damn is Oz strange 
         else
             %{Browse J}
             %{Browse {Sin ((2.0*3.1415926535*F*I)/44100.0)}/2.0}
             %{Sin ((2.0*3.1415926535*F*I)/44100.0)}/2.0 | {NoteToAi F I J+1.0}
-            {Sin (2.0*Pi*F*J)/44100.0}/2.0|{NoteToAi F I J+1.0}
+            {Sin (2.0*Pi*F*J)/44100.0}/2.0|{NoteToAi F I J+1.0 A}
         end
     end
 
-    fun{ChordToAi Chord}
+    fun{ChordToAi Chord N} %N = number of note in ai
         {Browse chord2ai}
         {Browse Chord}
         case Chord 
-        of H|T then
-            case H 
+        of H|T then 
+            case H
             of silence(duration:D) then
-                {SumAi {SilenceToAi D*44100.0 0.0} {ChordToAi T}}
-            [] note(name:N octave:O sharp:S duration:D instrment:none) then
-                {SumAi {NoteToAi {Frequency {Height H}} D*44100.0 0.0} {ChordToAi T}}
+                {SumAi {SilenceToAi D*44100.0 0.0} {ChordToAi T N}}
+            [] note(name:N octave:O sharp:S duration:D instrument:none) then
+                {Browse notechord2ai}
+                {Browse H}
+                {SumAi {NoteToAi {Frequency {Height H}} D*44100.0 0.0 N} {ChordToAi T N}}
             else
-                {ChordToAi T}
+                {Browse fuck}
+                {ChordToAi T N}
             end
         else
-            tail
+            nil
         end
     end
 
@@ -407,11 +412,12 @@ local
                 %{Browse duration}
                 %{Browse D*44100.0}
                 %{Append {NoteToAi {Frequency {Height H1}} 44100.0*D 0.0} {PartToAi T1}} %NOK 
-                {Flatten {NoteToAi {Frequency {Height H1}} 44100.0*D 0.0}|{PartToAi T1}}
+                {Flatten {NoteToAi {Frequency {Height H1}} 44100.0*D 0.0 0.0}|{PartToAi T1}}
             [] H2|T2 then
                 {Browse p2aiChord}
+                %{Browse {ChordToAi H1}}
                 %{Append {ChordToAi H1} {PartToAi T1}}
-                {Flatten {ChordToAi H1}|{PartToAi T1}}
+                {Flatten {ChordToAi H1 {IntToFloat {List.length H1}}}|{PartToAi T1}}
             end
         else
             nil
@@ -463,6 +469,7 @@ local
                 end
             end
         end
+
     end
 
     fun {Cut Start Finish Music Acc} %Acc = 0.0    

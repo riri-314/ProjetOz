@@ -7,7 +7,7 @@ local
                     b g a stretch(factor:0.5 [b c5])
                 b a g a stretch(factor:2.0 [d]) ]
    Doom = [duration([d#3 d#3 d#4 d#3 d#3 c#4 d#3 d#3 b3 d#3 d#3 a3 silence(duration:0.2) d#3 a#3 b3 d#3 d#3 d#4 d#3 d#3 c#4 d#3 d#3 b3 d#3 d#3 silence(duration: 0.2) a3 silence(duration: 0.6) d#3 d#3 d#4 d#3 d#3 c#4 d#3 d#3 b3 d#3 d#3 a3 d#3 d#3 a#3 b3 d#3 d#3 d#4 d#3] seconds:7.5)]
-   Doom0 = [duration([d#4 d#3 d#5] seconds:7.5)]
+   Doom0 = [duration([d#4 [b4 b5] d#4] seconds:5.0)]
    
    % This is not a music.
    Partition = {Flatten [Doom]} %flattened partition, output of PartitionToTimedList
