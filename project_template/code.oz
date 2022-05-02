@@ -370,7 +370,7 @@ local
         end
     end
 
-    fun {SilenceToAi Duration Acc}
+    fun {SilenceToAi Duration Acc} %Duration is the number of sample
         if Acc >= Duration then %I still dont understand this syntax, but it works
             nil
         else
@@ -389,7 +389,7 @@ local
             [] note(name:N octave:O sharp:S duration:D instrument:none) then
                 
                 %{Browse whattttt}
-                {Browse p2aiNote}
+                {Browse p2aiNote}p
                 {Browse H1}
                 %{Browse T1}
                 %{Browse {Height H1}}
@@ -517,7 +517,7 @@ local
     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    %TODOO: echo, fade, clip
+    %TODOO: echo, fade,
     %super usefull link http://strasheela.sourceforge.net/strasheela/doc/01-Basics.html#sec77
  
     Music = {Project.load CWD#'joy.dj.oz'}
