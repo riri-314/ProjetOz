@@ -9,7 +9,6 @@ local
 
     % Translate a note to the extended notation.
     fun {NoteToExtended Note Duration}
-        %{Browse fuck}
         case Note
         of Name#Octave then
             note(name:Name octave:{IntToFloat Octave} sharp:true duration:Duration instrument:none)
@@ -18,24 +17,12 @@ local
             of [_] then
                 note(name:Atom octave:4.0 sharp:false duration:Duration instrument:none)
             [] [N O] then
-                %{Browse O}
                 note(name:{StringToAtom [N]} octave:{StringToFloat [O]} sharp:false duration:Duration instrument: none)
             end
         end
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    %fun {Append L1 L2} %function to add to list, L1=first list to add, L2=second list to add
-    %    case L1 
-    %    of nil then 
-    %        L2
-    %    [] H|T then 
-    %        H | {Append T L2}
-    %    [] H then
-    %        {Append [H] L2} 
-    %    end
-    %end
 
     fun {Lenght0 L A}
         case L of nil then A
@@ -253,7 +240,6 @@ local
             [] silence(duration:R) then
                 H1|{PartitionToTimedListAux T1 T E} %pass silence to Mix, Mix pass silence to SilenceToAi, SilenceToAi make 0.0 sound
             [] nil then
-                {Browse fuck}
                 {PartitionToTimedListAux T1 T E}
             [] duration(1:P seconds:R) then 
                 {Append {SetDuration {PartitionToTimedListAux P T E} R} {PartitionToTimedListAux T1 T E}}
@@ -270,7 +256,6 @@ local
                 {NoteToExtended H1 T}|{PartitionToTimedListAux T1 T E}
             
             else
-                {Browse fuck}
                 H1|{PartitionToTimedListAux T1 T E} %for robustness
             end
         else
@@ -365,19 +350,19 @@ local
     end
 
     fun{ChordToAi Chord N} %N = number of note in ai
-        {Browse chord2ai}
-        {Browse Chord}
+        %{Browse chord2ai}
+        %{Browse Chord}
         case Chord 
         of H|T then 
             case H
             of silence(duration:D) then
                 {SumAi {SilenceToAi D*44100.0 0.0} {ChordToAi T N}}
             [] note(name:N octave:O sharp:S duration:D instrument:none) then
-                {Browse notechord2ai}
-                {Browse H}
+                %{Browse notechord2ai}
+                %{Browse H}
                 {SumAi {NoteToAi {Frequency {Height H}} D*44100.0 0.0 N} {ChordToAi T N}}
             else
-                {Browse fuck}
+            
                 {ChordToAi T N}
             end
         else
@@ -505,21 +490,21 @@ local
                 {Append {PartToAi {P2T Partition}} {Mix P2T T}} %NOK
                 
             [] merge(Intmusic) then %OK
-                {Merge Music P2T}
-            [] repeat(amount:Amount Music) then %OK 
-                {Append {Repeat Amount {Mix P2T Music}} {Mix P2T T}}
+                {Append {Merge Intmusic P2T} {Mix P2T T}}
+            [] repeat(amount:Amount Music0) then %OK 
+                {Append {Repeat Amount {Mix P2T Music0}} {Mix P2T T}}
             [] wave(FileName) then %OK
                 {Append {Project.readFile FileName} {Mix P2T T}}
             [] samples(Samples) then %OK
                 {Append {Sample Samples} {Mix P2T T}}
             %[] clip(low:Low high:High Music) then
             %    {Append {clip Low High Music} {Mix P2T T}}
-            [] reverse(1:Music) then
-                {Append {Reverse {Mix P2T Music}} {Mix P2T T}}
-            [] loop(seconds:Duration Music) then
-                {Append {Loop Duration {Mix P2T Music} 0.0} {Mix P2T T}}
-            [] cut(start:Start finish:Finish Music) then
-                {Append {Cut Start Finish Music 0.0} {Mix P2T T}}
+            [] reverse(1:Music1) then
+                {Append {Reverse {Mix P2T Music1}} {Mix P2T T}}
+            [] loop(seconds:Duration Music2) then
+                {Append {Loop Duration {Mix P2T Music2} 0.0} {Mix P2T T}}
+            [] cut(start:Start finish:Finish Music3) then
+                {Append {Cut Start Finish Music3 0.0} {Mix P2T T}}
             [] nil then
                 {Mix P2T T}
             else
@@ -533,7 +518,7 @@ local
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %TODOO: echo, fade, clip
-   
+    %super usefull link http://strasheela.sourceforge.net/strasheela/doc/01-Basics.html#sec77
  
     Music = {Project.load CWD#'joy.dj.oz'}
 
