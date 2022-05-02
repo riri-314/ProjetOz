@@ -1,7 +1,7 @@
 local
     % See project statement for API details.
     % !!! Please remove CWD identifier when submitting your project !!!
-    CWD = '/home/igor/Documents/ProjetOz/project_template/' % Put here the **absolute** path to the project files
+    CWD = '/home/riri/Documents/UCL/2021-2022/LINFO1104-oz/ProjetOz/project_template/' % Put here the **absolute** path to the project files
     [Project] = {Link [CWD#'Project2022.ozf']}
     Time = {Link ['x-oz://boot/Time']}.1.getReferenceTime
 
@@ -389,7 +389,7 @@ local
             [] note(name:N octave:O sharp:S duration:D instrument:none) then
                 
                 %{Browse whattttt}
-                {Browse p2aiNote}p
+                {Browse p2aiNote}
                 {Browse H1}
                 %{Browse T1}
                 %{Browse {Height H1}}
@@ -497,8 +497,28 @@ local
             nil
         end
     end
+    
+    fun {FadeIn Factor Music Acc}
+        case Music of H|T then
+            if (Acc =< 1.0) then
+                H*Acc | {FadeIn Factor T Acc+Factor}
+            else
+                music
+            end
+        else
+            nil
+        end
+    end
 
-
+    fun {Fade In Out Music} %if 5 sample to fade then 1/5 = 0.2 => factors = [0.8 0.6 0.4 0.2 0.0]
+        if (In > 0.0) then
+            {FadeIn 1.0/In*44100.0 Music 0.0}
+        elseif (Out > 0.0) then
+            {Reverse {FadeIn 1.0/In*44100.0 {Reverse Music} 0.0}} %So dirty but no time to do it the proper way
+        else
+            Music
+        end
+    end
 
 
     fun {Mix P2T Music}
@@ -546,11 +566,7 @@ local
     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-<<<<<<< HEAD
-    %TODOO: echo, fade,
-=======
-    %TODOO: fade
->>>>>>> a1fe035d87e646c1a2e775e5baab9026832ed768
+    
     %super usefull link http://strasheela.sourceforge.net/strasheela/doc/01-Basics.html#sec77
  
     Music = {Project.load CWD#'joy.dj.oz'}
