@@ -1,7 +1,7 @@
 local
     % See project statement for API details.
     % !!! Please remove CWD identifier when submitting your project !!!
-    CWD = '/home/riri/Documents/UCL/2021-2022/LINFO1104-oz/ProjetOz/project_template/' % Put here the **absolute** path to the project files
+    CWD = '/home/igor/Documents/ProjetOz/project_template/' % Put here the **absolute** path to the project files
     [Project] = {Link [CWD#'Project2022.ozf']}
     Time = {Link ['x-oz://boot/Time']}.1.getReferenceTime
 
@@ -440,6 +440,31 @@ local
         end
     end
 
+    fun {Clip Low High Music}
+        case Music of nil then nil
+        [] H|T then 
+            if H > High then High|{Clip Low High T}
+            elseif H < Low then Low|{Clip Low High T}
+            else H|{Clip Low High T}
+            end
+        end
+    end
+
+    fun {Echo Duration Decay Music P2T}
+        local Clone Liste in
+        Clone = {Append {SilenceToAi Duration*44100.0 0.0} Music}
+        local
+            fun {Multiply X Decay}{
+                X * Decay
+            }
+            end
+        in
+        Liste = [Music {Map Clone Multiply}]
+        {Merge Liste P2T}
+            end
+        end
+    end
+
     fun {Loop Duration Music Acc}
         local Nofl in 
             %NumberOfLoop 
@@ -505,6 +530,10 @@ local
                 {Append {Loop Duration {Mix P2T Music2} 0.0} {Mix P2T T}}
             [] cut(start:Start finish:Finish Music3) then
                 {Append {Cut Start Finish Music3 0.0} {Mix P2T T}}
+            [] clip(low:Low high:High Music4) then
+                {Append {Low High Music4} {Mix P2T T}}
+            [] echo(duration:Duration decay:Decay Music5) then
+                {Append {Echo Duration Decay Music5 P2T} {Mix P2T T}}
             [] nil then
                 {Mix P2T T}
             else
@@ -517,7 +546,11 @@ local
     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+<<<<<<< HEAD
     %TODOO: echo, fade,
+=======
+    %TODOO: fade
+>>>>>>> a1fe035d87e646c1a2e775e5baab9026832ed768
     %super usefull link http://strasheela.sourceforge.net/strasheela/doc/01-Basics.html#sec77
  
     Music = {Project.load CWD#'joy.dj.oz'}
