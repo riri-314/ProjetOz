@@ -137,7 +137,7 @@ local
                 %for chord
             [] H1 then
                 {NoteShifter H1 I}|{TransT T1 I J}
-                %fore note
+                %for note
             end
         [] nil then L
         end
@@ -157,8 +157,6 @@ local
     end
 
     fun {Stretch Part Factor} %Partion can take Silence Note and Chord as input, Part is allready a extended list
-        %{Browse stretch}
-        %{Browse Part}
         case Part 
         of H1|T1 then
             case H1
@@ -204,10 +202,6 @@ local
     end
 
     fun {SetDuration Part Time}
-        %{Browse setdur}
-        %{Browse Part}
-        %{Browse stretch}
-        %{Browse  {Stretch Part Time/{TimeofPart Part 0.0}}}
         {Stretch Part Time/{TimeofPart Part 0.0}}
     end
 
@@ -217,8 +211,6 @@ local
     fun {ChrodToTimedList Chord}
         case Chord
         of H|T then
-            %{Browse chord2list}
-            %{Browse H}
             {NoteToExtended H 1.0}|{ChrodToTimedList T} %only use | "pipe" when single ellement on head
         [] nil then
             nil
@@ -245,7 +237,6 @@ local
                 {Append {SetDuration {PartitionToTimedListAux P T E} R} {PartitionToTimedListAux T1 T E}}
                 %{Append {PartitionToTimedListAux P (R/{IntToFloat {Lenght P}})*E E} {PartitionToTimedListAux T1 T E}}%Need to make a proper DurationToTimedList func
             [] stretch(1:P factor:R) then
-                %{Browse P}
                 {Append {Stretch {PartitionToTimedListAux P T E} R} {PartitionToTimedListAux T1 T E}}
                 %{Append {PartitionToTimedListAux P T*R R} {PartitionToTimedListAux T1 T E}} %Need to make a proper Stretch func
             [] drone(note:Nc amount:N) then
@@ -266,11 +257,8 @@ local
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     fun {Height Note} %C C# D D# E F F# G G# A A# B
-        %{Browse height}
-        %{Browse Note}
         case Note
         of note(name:Name octave:Octave sharp:Sharp duration:Duration instrument:none) then
-            %{Browse Octave/3.0}
             if Name == b then
                 2.0 + (Octave-4.0)
             elseif Name == a then
@@ -313,7 +301,6 @@ local
     end
         
     fun {Frequency H} %height of the Note in Hz
-        %{Browse H}
         {Pow 2.0 H/12.0} * 440.0
     end
 
@@ -342,24 +329,17 @@ local
         if J >= I then
             nil %Strange way to do it...Damn is Oz strange 
         else
-            %{Browse J}
-            %{Browse {Sin ((2.0*3.1415926535*F*I)/44100.0)}/2.0}
-            %{Sin ((2.0*3.1415926535*F*I)/44100.0)}/2.0 | {NoteToAi F I J+1.0}
             {Sin (2.0*Pi*F*J)/44100.0}/2.0|{NoteToAi F I J+1.0 A}
         end
     end
 
     fun{ChordToAi Chord N} %N = number of note in ai
-        %{Browse chord2ai}
-        %{Browse Chord}
         case Chord 
         of H|T then 
             case H
             of silence(duration:D) then
                 {SumAi {SilenceToAi D*44100.0 0.0} {ChordToAi T N}}
             [] note(name:N octave:O sharp:S duration:D instrument:none) then
-                %{Browse notechord2ai}
-                %{Browse H}
                 {SumAi {NoteToAi {Frequency {Height H}} D*44100.0 0.0 N} {ChordToAi T N}}
             else
             
@@ -379,29 +359,14 @@ local
     end
 
     fun {PartToAi Partition}
-        %{Browse p2Ai}
-        %{Browse Partition}
         case Partition 
         of H1|T1 then
             case H1 
             of silence(duration:D) then
                 {Append {SilenceToAi 44100.0*D 0.0} {PartToAi T1}}
             [] note(name:N octave:O sharp:S duration:D instrument:none) then
-                
-                %{Browse whattttt}
-                {Browse p2aiNote}
-                {Browse H1}
-                %{Browse T1}
-                %{Browse {Height H1}}
-                %{Browse afterfrequency}
-                %{Browse duration}
-                %{Browse D*44100.0}
-                %{Append {NoteToAi {Frequency {Height H1}} 44100.0*D 0.0} {PartToAi T1}} %NOK 
                 {Flatten {NoteToAi {Frequency {Height H1}} 44100.0*D 0.0 0.0}|{PartToAi T1}}
             [] H2|T2 then
-                {Browse p2aiChord}
-                %{Browse {ChordToAi H1}}
-                %{Append {ChordToAi H1} {PartToAi T1}}
                 {Flatten {ChordToAi H1 {IntToFloat {List.length H1}}}|{PartToAi T1}}
             end
         else
@@ -522,18 +487,11 @@ local
 
 
     fun {Mix P2T Music}
-        {Browse music}
-        {Browse Music}
         case Music 
         of H|T then
             case H 
             of partition(Partition) then %OK
-                
-                %{Browse p2t}
-                %{Browse {P2T Partition}}
-                
-                {Append {PartToAi {P2T Partition}} {Mix P2T T}} %NOK
-                
+                {Append {PartToAi {P2T Partition}} {Mix P2T T}} %OK
             [] merge(Intmusic) then %OK
                 {Append {Merge Intmusic P2T} {Mix P2T T}}
             [] repeat(amount:Amount Music0) then %OK 
@@ -542,8 +500,6 @@ local
                 {Append {Project.readFile FileName} {Mix P2T T}}
             [] samples(Samples) then %OK
                 {Append {Sample Samples} {Mix P2T T}}
-            %[] clip(low:Low high:High Music) then
-            %    {Append {clip Low High Music} {Mix P2T T}}
             [] reverse(1:Music1) then
                 {Append {Reverse {Mix P2T Music1}} {Mix P2T T}}
             [] loop(seconds:Duration Music2) then
@@ -551,7 +507,7 @@ local
             [] cut(start:Start finish:Finish Music3) then
                 {Append {Cut Start Finish Music3 0.0} {Mix P2T T}}
             [] clip(low:Low high:High Music4) then
-                {Append {Low High Music4} {Mix P2T T}}
+                {Append {Clip Low High Music4} {Mix P2T T}}
             [] echo(duration:Duration decay:Decay Music5) then
                 {Append {Echo Duration Decay Music5 P2T} {Mix P2T T}}
             [] nil then
